@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Comments Stack</title>
+		
+		<style>
+		body, html {
+			margin:0;
+			padding: 0;
+			width: 100%;
+			height: 100%;
+		}
+
+		body {
+			background: #ccc;
+			font-family: sans-serif;
+		}
+
+		.comments-wrapper {
+			background: #fff;
+			width: 660px;
+			margin: 0 auto;
+			color: #333;
+
+		}
+
+		.comment {
+			border-left: 3px #aaa solid;
+			padding: 10px 15px;
+
+		}
+		
+		.comment .name {
+			font-size: 1.5em;
+			font-weight: bold;
+		}
+
+		.comment .comment {
+
+
+		}
+
+		</style>
+
+	</head>
+	<body>
+		<div class="comments-wrapper" id="holder">
+		
+		</div>
+
+	
+		<div style="display:none">
+			
+			<div class="comment" id="clone">
+				<span class="name">Some Person</span>
+				<p>
+					Lorem ipsum dolor sit amet, consectetur adipisicing elit. Non, aliquam, laboriosam, reprehenderit tenetur delectus dicta vel id earum ipsa obcaecati mollitia nostrum dolore ea. Beatae ipsum voluptas dignissimos aperiam in.
+				</p>
+			</div>
+		</div>
+
+
+
+		<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+		<script>
+
+			$(function() {
+				// Let's generate some coments
+				var $base = $("#clone");
+
+				function add_comment(children, root) {
+					var me = $base.clone().attr('id', '');
+					
+					var root = "#holder" || root;
+
+					if(children !== null) {
+						me.append(children);
+					} 
+
+					me.appendTo(root);
+				}
+
+				function child_maker(c,n) {
+					var copy = $(c).clone();
+
+					while(n--) {
+						copy.append(c[0].outerHTML);
+					}
+
+					return copy;
+				}
+
+				add_comment(
+					child_maker(
+						child_maker(
+							child_maker(
+								child_maker($base, 1),1
+							), 1), 3)
+					);
+
+				add_comment(
+					child_maker(
+						child_maker($base, 1),
+						1
+					)
+					);
+				add_comment(child_maker($base));
+				add_comment();
+				add_comment();
+				add_comment();
+
+				// Okay, now let's color them
+				var colorStack = {
+				         // There is a color for each level, when
+				         // we run out, we roll over. Add more colors as needed.
+					 colors : [
+						"#33B5E5",
+						"#FF4444",
+						"#FFBB33",
+						"#AA66CC",
+						"#99CC00",
+					],
+
+					index : -1,
+					push : function () {
+						this.index = ( this.index + 1 ) % this.colors.length;
+					},
+					
+					pop : function () { 
+						this.index = this.index - 1 > 0 ? this.index - 1 : 0;
+					},
+
+					getColor : function () {
+						return this.colors[this.index];
+					}
+				};
+
+				function colorize (root) {
+					var $children = $(root).children('.comment');
+					for (var i = 0; i < $children.length; i++) {
+				                
+				                // This assumes that the comments have a border-width and
+				                // border-style set already.
+						$($children[i]).css( { 'border-left-color' : 
+				                                        colorStack.getColor() });
+
+				                // If this child has children, we recurse passing this child as
+				                // the root of our new subtree
+						if(  $($children[i]).children('.comment').length > 0 ) {
+				                        // We give a new color for this family
+							colorStack.push();
+
+							colorize($children[i]);
+
+				                        // And we need to make sure we undo it when
+				                        // we go up a level.
+							colorStack.pop();
+						}
+						
+					};
+				}
+
+				// Call it like this, where the argument is the root of the comment tree.
+
+				colorize($("#holder"));
+
+
+			});
+
+		</script>
+	</body>
+</html>
